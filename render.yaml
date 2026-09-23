@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: uniforma
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      # Set these in the Render dashboard, not here.
+      - key: CLAID_API
+        sync: false
+      - key: GROQ_API
+        sync: false

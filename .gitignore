@@ -1,0 +1,10 @@
+# secrets — never commit these
+.env
+*.env
+Uniformame Workflow.json
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
