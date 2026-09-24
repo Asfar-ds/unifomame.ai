@@ -1,3 +1,13 @@
+---
+title: Uniforma Studio
+emoji: 👕
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Uniforma Studio
 
 Turns a flat school-uniform illustration into a realistic product photo, a child model wearing

@@ -68,7 +68,7 @@ def _job(factory) -> dict:
 
 
 @app.get("/api/job/{job_id}")
-def job_status(job_id: str):
+async def job_status(job_id: str):
     job = jobs.get(job_id)
     if not job:
         raise HTTPException(404, "Unknown or expired job")
@@ -112,7 +112,7 @@ class ImproveBody(BaseModel):
 
 
 @app.post("/api/improve")
-def improve(body: ImproveBody):
+async def improve(body: ImproveBody):
     async def one(url: str | None, make_prompt) -> str | None:
         if not url:
             return None
@@ -139,7 +139,7 @@ class ModelBody(BaseModel):
 
 
 @app.post("/api/model")
-def model(body: ModelBody):
+async def model(body: ModelBody):
     clothing = [u for u in (body.shirtUrl, body.pantUrl) if u]
     pose = _fill(MODEL_POSE, body.character)
 
@@ -157,7 +157,7 @@ class EditModelBody(BaseModel):
 
 
 @app.post("/api/edit-model")
-def edit_model(body: EditModelBody):
+async def edit_model(body: EditModelBody):
     async def work() -> dict:
         prompt = await llm.model_edit_prompt(body.instruction)
         url = await claid.ai_edit(body.modelUrl, prompt, model="v2", aspect_ratio=None)
@@ -175,7 +175,7 @@ class VideoBody(BaseModel):
 
 
 @app.post("/api/video")
-def video(body: VideoBody):
+async def video(body: VideoBody):
     duration = 10 if body.duration == 10 else 5
     base = _fill(VIDEO_PROMPT, body.character, duration)
 
