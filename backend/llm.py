@@ -1,7 +1,10 @@
 """Replaces the Groq 'AI Agent' nodes. Without a Groq key the raw text is sent to Claid as-is."""
+import logging
 import os
 
 import httpx
+
+log = logging.getLogger("uniforma")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
@@ -36,16 +39,21 @@ MODEL_EDIT_SYSTEM = (
 
 
 async def _chat(system: str, user: str) -> str | None:
+    """Returns None if Groq is unavailable, so the caller falls back to the raw text."""
     key = (os.getenv("GROQ_API") or os.getenv("GROQ_API_KEY") or "").strip()
     if not key:
         return None
-    async with httpx.AsyncClient(timeout=60) as c:
-        r = await c.post(GROQ_URL, headers={"Authorization": f"Bearer {key}"}, json={
-            "model": MODEL,
-            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        })
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"].strip()
+    try:
+        async with httpx.AsyncClient(timeout=60) as c:
+            r = await c.post(GROQ_URL, headers={"Authorization": f"Bearer {key}"}, json={
+                "model": MODEL,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            })
+        r.raise_for_status()
+        return r.json()["choices"][0]["message"]["content"].strip()
+    except Exception:
+        log.exception("Groq call failed; using the original text")
+        return None
 
 
 async def shirt_prompt(feedback: str) -> str:

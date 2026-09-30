@@ -4,11 +4,18 @@ The browser starts a job, gets an id back straight away, then polls until it is 
 Jobs live in memory only, so a server restart forgets them.
 """
 import asyncio
+import logging
 import time
 import uuid
 from typing import Any, Awaitable, Callable
 
+from .claid import ClaidError
+
 TTL = 3600  # forget finished jobs after an hour
+
+log = logging.getLogger("uniforma")
+
+GENERIC_ERROR = "Something went wrong on our side. Please try again."
 
 _jobs: dict[str, dict[str, Any]] = {}
 
@@ -30,8 +37,11 @@ def start(factory: Callable[[], Awaitable[Any]]) -> str:
         try:
             job["result"] = await factory()
             job["status"] = "done"
-        except Exception as e:  # reported to the browser as-is
-            job["error"] = str(e)
+        except Exception as e:
+            # ClaidError messages are written for the person using the app; anything
+            # else (network, bugs) stays in the log and shows a generic line instead.
+            log.exception("job %s failed", job_id)
+            job["error"] = str(e) if isinstance(e, ClaidError) else GENERIC_ERROR
             job["status"] = "error"
         finally:
             job["done_at"] = time.time()
