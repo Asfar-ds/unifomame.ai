@@ -10,7 +10,7 @@ from pydantic import BaseModel
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
-from . import claid, jobs, llm, profile  # noqa: E402
+from . import claid, images, jobs, llm, profile  # noqa: E402
 
 SHIRT_PROMPT = (
     "Convert this flat shirt illustration into a highly realistic product photo while preserving the exact design, "
@@ -79,7 +79,7 @@ async def job_status(job_id: str):
 @app.post("/api/upload")
 async def upload(shirt: UploadFile = File(...), pant: UploadFile | None = File(None)):
     async def realistic(f: tuple, prompt: str) -> str:
-        content, filename, content_type = f
+        content, filename, content_type = images.prepare(*f[:2])
         url = await claid.upload_image(content, filename, content_type)
         return await claid.ai_edit(url, prompt)
 
